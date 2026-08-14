@@ -1,0 +1,13 @@
+{
+  "name": "SARC IFC Brusque 2026",
+  "teams": [
+    { "name": "Alpha Team", "tag": "ATX", "players": ["[ATX-KYOSHY]", "[ATX-GABRIEL]", "[ATX-LUCAS]"] },
+    { "name": "Contra Terror", "tag": "CT", "players": ["[CT-JOAO]", "[CT-PEDRO]", "[CT-MARIA]"] },
+    { "name": "Devs Team", "tag": "DEV", "players": ["[DEV-CARLOS]", "[DEV-ANA]", "[DEV-BRUNO]"] },
+    { "name": "Squad Fire", "tag": "SFG", "players": ["[SFG-JOAO]", "[SFG-LUCAS]", "[SFG-KAYKY]"] },
+    { "name": "Team ABC", "tag": "ABC", "players": ["[ABC-DIEGO]", "[ABC-RAFA]", "[ABC-TIAGO]"] },
+    { "name": "Team LOL", "tag": "LOL", "players": ["[LOL-GUI]", "[LOL-FELIPE]", "[LOL-VITOR]"] },
+    { "name": "Team AAA", "tag": "AAA", "players": ["[AAA-NICO]", "[AAA-DANI]", "[AAA-RENAN]"] },
+    { "name": "Team BBB", "tag": "BBB", "players": ["[BBB-MARCO]", "[BBB-IGOR]", "[BBB-YURI]"] }
+  ]
+}

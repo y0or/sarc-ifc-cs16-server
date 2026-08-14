@@ -1,0 +1,94 @@
+# =============================================================================
+# SARC Docker Tournament Server v1.0
+# Plataforma 100% LOCAL para gerenciamento/execução de torneios de
+# Counter-Strike 1.6 em LAN — sem dependência de nenhum serviço em nuvem.
+#
+# Serviços:
+#   cs16-server -> servidor dedicado do jogo. Usa a imagem cajuclc/cstrike-docker
+#                  (Metamod + AMX Mod X + DProto + Podbot, ~10 mil pulls,
+#                  projeto ativo há anos: github.com/CajuCLC/cstrike-docker).
+#                  Trocamos para essa imagem depois de testar duas outras
+#                  (kuroame/rehlds — nem existe mais no Docker Hub — e
+#                  goldsourceservers/cstrike — subia e o RCON funcionava,
+#                  mas o client do jogo não conseguia validar a conexão).
+#                  O DProto incluído aqui lida com a validação de protocolo
+#                  de forma mais permissiva, o que ataca direto o tipo de
+#                  problema que estávamos enfrentando.
+#   backend     -> API REST + WebSocket + Parser de logs + RCON + Frontend estático
+#
+# Os dois containers ficam na MESMA rede Docker (criada automaticamente pelo
+# compose), então o backend enxerga o servidor de jogo pelo nome do serviço
+# "cs16-server". Compartilham também a pasta ./logs (volume): o servidor
+# escreve, o backend lê continuamente.
+#
+# IMPORTANTE: mesmo com o servidor certo, se o Firewall do Windows não
+# tiver as regras de entrada liberadas para a porta 27015 (UDP e TCP), a
+# conexão de outros PCs continua falhando. Veja o comando pronto no
+# README.md, seção 10 ("Firewall") — rode-o ANTES de testar de novo.
+# =============================================================================
+
+services:
+  cs16-server:
+    image: cajuclc/cstrike-docker:latest
+    container_name: sarc_cs16_server
+    # Vínculo explícito em 0.0.0.0 para garantir que outras máquinas da
+    # rede consigam alcançar a porta (não só localhost).
+    ports:
+      - "0.0.0.0:27015:27015/udp"
+      - "0.0.0.0:27015:27015/tcp"
+    environment:
+      SERVER_NAME: "SARC IFC Brusque - Torneio CS 1.6"
+      START_MAP: "de_dust2"
+      # 6 jogadores (3x3) + 1 vaga extra de espectador/administrador.
+      MAXPLAYERS: "7"
+      RCON_PASSWORD: "${RCON_PASSWORD:-admin123}"
+      SYS_TICRATE: "1000"
+    volumes:
+      # Caminhos específicos desta imagem (diferente das anteriores) —
+      # confirme sempre no log de boot se o server.cfg foi carregado.
+      - ./cstrike/server.cfg:/home/steam/cstrike/cstrike/server.cfg
+      - ./logs:/home/steam/cstrike/cstrike/logs
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    healthcheck:
+      test: ["CMD", "pgrep", "hlds_linux"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: sarc_backend
+    depends_on:
+      - cs16-server
+    ports:
+      # Painel acessível tanto em http://localhost (porta padrão HTTP) quanto
+      # em http://localhost:8080. Se a porta 80 já estiver em uso na máquina
+      # (IIS, outro serviço, etc.), comente a linha "80:8080" abaixo — o
+      # painel continua funcionando normalmente em :8080.
+      - "8080:8080"
+      - "80:8080"
+    environment:
+      PORT: "8080"
+      # Nome do serviço acima — resolvido automaticamente pela rede interna
+      # do Docker Compose. Não precisa alterar em condições normais.
+      CS_SERVER_HOST: "${CS_SERVER_HOST:-cs16-server}"
+      CS_SERVER_RCON_PORT: "27015"
+      # Precisa ser IDÊNTICA à RCON_PASSWORD do cs16-server acima (ambas
+      # vêm da mesma variável do .env, então normalmente já bate sozinho).
+      RCON_PASSWORD: "${RCON_PASSWORD:-admin123}"
+      # Deixe RCON_MOCK=true para testar toda a interface e o fluxo do
+      # torneio SEM um servidor CS 1.6 real rodando (útil para homologar a
+      # operação antes do evento).
+      RCON_MOCK: "${RCON_MOCK:-false}"
+      DEFAULT_MAP: "de_dust2"
+      MATCH_ROUNDS: "5"
+      LOGS_DIR: "/app/logs"
+      DATA_DIR: "/app/data"
+    volumes:
+      - ./logs:/app/logs
+      - ./backend/data:/app/data
+    restart: unless-stopped

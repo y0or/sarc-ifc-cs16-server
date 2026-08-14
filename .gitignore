@@ -1,0 +1,5 @@
+node_modules/
+backend/data/tournament/*.json
+backend/data/history/*.json
+logs/*.log
+.env
