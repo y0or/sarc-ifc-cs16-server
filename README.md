@@ -42,7 +42,7 @@ Para que outra máquina possa assumir o papel de servidor e rodar este projeto, 
 ### 1. Clonar o repositório
 Abra o terminal da máquina que servirá de host e clone o projeto:
 ```bash
-git clone [https://github.com/y0or/sarc-ifc-cs16-server.git](https://github.com/y0or/sarc-ifc-cs16-server.git)
+git clone https://github.com/y0or/sarc-ifc-cs16-server.git
 cd sarc-ifc-cs16-server
 
 ```
